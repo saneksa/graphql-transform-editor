@@ -31,31 +31,41 @@ function App() {
   codeRef.current = code;
 
   const handleChange = useCallback((value: string) => {
-    setGraphqlCode(value);
-    setCode(graphqlQueryToCode(value));
-  }, []);
-
-  const handleBeautify = useCallback(() => {
     try {
-      setGraphqlCode((c = "") => {
-        setCode(jsBeautify(graphqlQueryToCode(c), config));
-
-        return jsBeautify(c, config);
-      });
+      setGraphqlCode(value);
+      setCode(graphqlQueryToCode(value));
     } catch (error) {
       console.error(error);
     }
   }, []);
 
+  const handleBeautify = useCallback(() => {
+    try {
+      setGraphqlCode((c = "") => jsBeautify(c, config));
+
+      setCode(
+        graphqlCode ? jsBeautify(graphqlQueryToCode(graphqlCode), config) : ""
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  }, [graphqlCode]);
+
   useEffect(() => {
-    window.addEventListener("keydown", (e) => {
+    const handleSave = (e: KeyboardEvent) => {
       if ((e.ctrlKey && e.key === "s") || e.key === "ы") {
         codeRef.current && copyToClipboard(codeRef.current);
 
         e.preventDefault();
         e.stopPropagation();
       }
-    });
+    };
+
+    window.addEventListener("keydown", handleSave);
+
+    return () => {
+      window.removeEventListener("keydown", handleSave);
+    };
   }, []);
 
   return (
