@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "rc-message/assets/index.css";
-import jsBeautify from "js-beautify";
 import { graphqlQueryToCode } from "@saneksa/gql-query-transformer";
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
@@ -8,24 +7,10 @@ import { monokai } from "@uiw/codemirror-theme-monokai";
 import copyToClipboard from "copy-to-clipboard";
 import Message from "rc-message";
 import { Flex } from "@saneksa/react-flex";
-
-const config = {
-  indent_size: 2,
-  indent_char: " ",
-  max_preserve_newlines: 0,
-  preserve_newlines: true,
-  keep_array_indentation: false,
-  break_chained_methods: true,
-  brace_style: "collapse",
-  space_before_conditional: true,
-  unescape_strings: false,
-  jslint_happy: false,
-  end_with_newline: false,
-  wrap_line_length: 0,
-  comma_first: false,
-  e4x: false,
-  indent_empty_lines: false,
-} satisfies jsBeautify.JSBeautifyOptions;
+import prettier from "prettier/standalone";
+import prettierGraphql from "prettier/plugins/graphql";
+import prettierEstree from "prettier/plugins/estree";
+import prettierBabel from "prettier/plugins/babel";
 
 function App() {
   const [graphqlCode, setGraphqlCode] = useState<string | undefined>(undefined);
@@ -42,13 +27,23 @@ function App() {
     }
   }, []);
 
-  const handleBeautify = useCallback(() => {
+  const handleBeautify = useCallback(async () => {
     try {
-      setGraphqlCode((c = "") => jsBeautify(c, config));
+      graphqlCode &&
+        setGraphqlCode(
+          await prettier.format(graphqlCode, {
+            parser: "graphql",
+            plugins: [prettierGraphql],
+          })
+        );
 
-      setCode(
-        graphqlCode ? jsBeautify(graphqlQueryToCode(graphqlCode), config) : ""
-      );
+      graphqlCode &&
+        setCode(
+          await prettier.format(graphqlQueryToCode(graphqlCode), {
+            parser: "babel",
+            plugins: [prettierEstree, prettierBabel],
+          })
+        );
     } catch (error) {
       console.error(error);
     }
