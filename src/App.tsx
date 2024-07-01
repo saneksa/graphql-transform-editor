@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import "rc-message/assets/index.css";
 import jsBeautify from "js-beautify";
 import { graphqlQueryToCode } from "@saneksa/gql-query-transformer";
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { monokai } from "@uiw/codemirror-theme-monokai";
 import copyToClipboard from "copy-to-clipboard";
+import Message from "rc-message";
+import { Flex } from "@saneksa/react-flex";
 
 const config = {
   indent_size: 2,
@@ -53,8 +56,14 @@ function App() {
 
   useEffect(() => {
     const handleSave = (e: KeyboardEvent) => {
-      if ((e.ctrlKey && e.key === "s") || e.key === "ы") {
-        codeRef.current && copyToClipboard(codeRef.current);
+      if (e.ctrlKey && ["c", "с", "s", "ы"].includes(e.key)) {
+        if (codeRef.current) {
+          copyToClipboard(codeRef.current) &&
+            Message.success({
+              theme: "dark",
+              content: "Код был скопирован в буфер обмена",
+            });
+        }
 
         e.preventDefault();
         e.stopPropagation();
@@ -69,35 +78,26 @@ function App() {
   }, []);
 
   return (
-    <div>
+    <Flex gap={12} direction="vertical">
       <button
         style={{
           width: "100%",
           height: "48px",
           cursor: "pointer",
-          marginBottom: "24px",
+          fontSize: "24px",
         }}
         onClick={handleBeautify}
       >
         Сделать красиво
       </button>
-      <div
-        style={{
-          display: "flex",
-          width: "100%",
-          height: "100%",
-          boxSizing: "border-box",
-          maxWidth: "100%",
-        }}
-      >
-        <div
+      <Flex gap={0} justify="center" width="100%">
+        <Flex
+          gap={12}
+          direction="vertical"
           key={1}
-          style={{
-            flex: "1 0 50%",
-            maxWidth: "50%",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          justify="center"
+          align="center"
+          width="50%"
         >
           <div>Graphql query</div>
           <CodeMirror
@@ -108,15 +108,17 @@ function App() {
             onChange={handleChange}
             title="asddasd"
           />
-        </div>
+        </Flex>
 
-        <div
+        <Flex
           key={2}
-          style={{
-            flex: "1 0 50%",
-            maxWidth: "50%",
-          }}
+          gap={12}
+          direction="vertical"
+          justify="center"
+          align="center"
+          width="50%"
         >
+          <div>Code</div>
           <CodeMirror
             value={code}
             readOnly={true}
@@ -125,9 +127,9 @@ function App() {
             theme={monokai}
             extensions={[javascript()]}
           />
-        </div>
-      </div>
-    </div>
+        </Flex>
+      </Flex>
+    </Flex>
   );
 }
 
